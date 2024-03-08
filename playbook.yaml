@@ -11,6 +11,7 @@
         pkg:
           - zsh
           - vim
+          - libnss3-tools
     - name: Create Operator user
       ansible.builtin.user:
         name: operator
@@ -29,7 +30,7 @@
       ansible.builtin.command: wget -O /home/operator/install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
       become: yes
       become_user: operator
-    - name: Make Oh My Zsh installer runnable
+    - name: Make Oh My Zsh installer executable
       ansible.builtin.file:
         path: /home/operator/install.sh
         state: touch
@@ -59,3 +60,10 @@
         owner: operator
         group: operator
         mode: '0644'
+    - name: Download mkcert
+      ansible.builtin.command: wget -O /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/arm64"
+    - name: Make mkcert executable
+      ansible.builtin.file:
+        path: /usr/local/bin/mkcert 
+        state: touch
+        mode: u=rwx,g=rwx,o=rwx
