@@ -1,8 +1,21 @@
 - name: Update Raspberry Pi
   hosts: raspberrypi
   remote_user: root
+  vars:
+    kubernetes_version: v1.29
 
   tasks:
+    - name: Create /etc/apt/keyrings
+      ansible.builtin.file:
+        path: /etc/api/keyrings
+        state: directory
+        mode: '0755'
+    - name: Setup Kubernetes Keys
+      ansible.builtin.shell: curl -fsSL "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/Release.key" | gpg --batch --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    - name: Add Apt Kubernetes Repository
+      ansible.builtin.apt_repository:
+        repo: deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/" /
+        state: present
     - name: Upgrade the OS (apt-get dist-upgrade)
       ansible.builtin.apt:
         upgrade: full
@@ -12,6 +25,10 @@
           - zsh
           - vim
           - libnss3-tools
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - kubectl
     - name: Create Operator user
       ansible.builtin.user:
         name: operator
