@@ -36,6 +36,12 @@
         mode: u=rwx,g=r,o=r
       become: yes
       become_user: operator
+    - name: Remove existing Oh My Zsh installation
+      ansible.builtin.file:
+        path: /home/operator/.oh-my-zsh
+        state: absent
+      become: yes
+      become_user: operator
     - name: Install Oh My Zsh
       ansible.builtin.command: /home/operator/install.sh --unattended --keep-zshrc
       become: yes
