@@ -26,10 +26,15 @@
         state: link
         dest: /bin/sh
         follow: false
+    - name: Check if Oh My Zsh already installed 
+      ansible.builtin.stat:
+        path: /home/operator/.oh-my-zsh
+      register: oh_my_zsh_installed
     - name: Download Oh My Zsh
       ansible.builtin.command: wget -O /home/operator/install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
       become: yes
       become_user: operator
+      when: not oh_my_zsh_installed.stat.exists
     - name: Make Oh My Zsh installer executable
       ansible.builtin.file:
         path: /home/operator/install.sh
@@ -37,22 +42,19 @@
         mode: u=rwx,g=r,o=r
       become: yes
       become_user: operator
-    - name: Remove existing Oh My Zsh installation
-      ansible.builtin.file:
-        path: /home/operator/.oh-my-zsh
-        state: absent
-      become: yes
-      become_user: operator
+      when: not oh_my_zsh_installed.stat.exists
     - name: Install Oh My Zsh
       ansible.builtin.command: /home/operator/install.sh --unattended --keep-zshrc
       become: yes
       become_user: operator
+      when: not oh_my_zsh_installed.stat.exists
     - name: Delete Oh My Zsh Installer
       ansible.builtin.file:
         path: /home/operator/install.sh
         state: absent
       become: yes
       become_user: operator
+      when: not oh_my_zsh_installed.stat.exists
     - name: Copy file with owner and permissions
       ansible.builtin.copy:
         src: .zshrc
@@ -60,10 +62,30 @@
         owner: operator
         group: operator
         mode: '0644'
+    - name: Check if mkcert installed
+      ansible.builtin.stat:
+        path: /usr/local/bin/mkcert
+      ignore_errors: true
+      register: mkcert_installed
     - name: Download mkcert
       ansible.builtin.command: wget -O /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/arm64"
+      when: not mkcert_installed.stat.exists
     - name: Make mkcert executable
       ansible.builtin.file:
         path: /usr/local/bin/mkcert 
         state: touch
         mode: u=rwx,g=rwx,o=rwx
+      when: not mkcert_installed.stat.exists
+    - name: Check if ORY CLI installed (Hydra/Kratos)
+      ansible.builtin.stat:
+        path: /usr/local/bin/ory
+      ignore_errors: true
+      register: ory_installed
+    - name: Install ORY CLI (Hydra/Kratos)
+      ansible.builtin.shell: bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -b /usr/local/bin ory
+      when: not ory_installed.stat.exists
+    - name: Update ORY CLI permissions
+      ansible.builtin.file:
+        path: /usr/local/bin/ory
+        state: touch
+        mode: u=rwx,g=rx,o=rx
