@@ -47,28 +47,8 @@
       ansible.builtin.stat:
         path: /home/operator/.oh-my-zsh
       register: oh_my_zsh_installed
-    - name: Download Oh My Zsh
-      ansible.builtin.command: wget -O /home/operator/install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-      become: yes
-      become_user: operator
-      when: not oh_my_zsh_installed.stat.exists
-    - name: Make Oh My Zsh installer executable
-      ansible.builtin.file:
-        path: /home/operator/install.sh
-        state: touch
-        mode: u=rwx,g=r,o=r
-      become: yes
-      become_user: operator
-      when: not oh_my_zsh_installed.stat.exists
     - name: Install Oh My Zsh
-      ansible.builtin.command: /home/operator/install.sh --unattended --keep-zshrc
-      become: yes
-      become_user: operator
-      when: not oh_my_zsh_installed.stat.exists
-    - name: Delete Oh My Zsh Installer
-      ansible.builtin.file:
-        path: /home/operator/install.sh
-        state: absent
+      ansible.builtin.shell: sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" "" --unattended --keep-zshrc
       become: yes
       become_user: operator
       when: not oh_my_zsh_installed.stat.exists
