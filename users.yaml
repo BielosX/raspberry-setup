@@ -1,0 +1,29 @@
+- name: Create Users
+  hosts: raspberrypi
+  remote_user: root
+  tasks:
+
+    - name: Create Operator user
+      ansible.builtin.user:
+        name: operator
+        group: operator
+        create_home: true
+        shell: /usr/bin/zsh
+        password: "{{ 'InitialPassword' | password_hash('sha512') }}"
+        update_password: on_create
+    - name: Check if Oh My Zsh already installed 
+      ansible.builtin.stat:
+        path: /home/operator/.oh-my-zsh
+      register: oh_my_zsh_installed
+    - name: Install Oh My Zsh
+      ansible.builtin.shell: sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" "" --unattended --keep-zshrc
+      become: yes
+      become_user: operator
+      when: not oh_my_zsh_installed.stat.exists
+    - name: Copy file with owner and permissions
+      ansible.builtin.copy:
+        src: .zshrc
+        dest: /home/operator/.zshrc
+        owner: operator
+        group: operator
+        mode: '0644'
