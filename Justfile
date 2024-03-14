@@ -4,4 +4,7 @@ packages:
 users:
     ansible-playbook users.yaml -i inventory -k 
 
-all: packages users
+podman:
+    ansible-playbook podman.yaml -i inventory -k
+
+all: packages users podman

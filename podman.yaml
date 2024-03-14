@@ -1,0 +1,9 @@
+- name: Manage Podman
+  hosts: raspberrypi
+  remote_user: root
+  tasks:
+
+    - name: Install Podman package
+      ansible.builtin.apt:
+        pkg:
+          - podman
