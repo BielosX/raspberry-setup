@@ -7,3 +7,25 @@
       ansible.builtin.apt:
         pkg:
           - podman
+    - name: Create Registry container
+      containers.podman.podman_container:
+        name: podman-registry
+        image: registry:2
+        rm: true
+        state: created
+        ports:
+          - "5000:5000"
+    - name: Generate systemd unit file for registry container
+      containers.podman.podman_generate_systemd:
+        name: podman-registry
+        new: true
+        no_header: false
+        dest: /etc/systemd/system
+        restart_policy: always
+        restart_sec: 20
+    - name: Ensure registry container is started and enabled
+      ansible.builtin.systemd:
+        name: container-podman-registry
+        daemon_reload: true
+        state: started
+        enabled: true
