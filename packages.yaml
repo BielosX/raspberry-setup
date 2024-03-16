@@ -35,20 +35,6 @@
         state: link
         dest: /bin/sh
         follow: false
-    - name: Check if mkcert installed
-      ansible.builtin.stat:
-        path: /usr/local/bin/mkcert
-      ignore_errors: true
-      register: mkcert_installed
-    - name: Download mkcert
-      ansible.builtin.command: wget -O /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/arm64"
-      when: not mkcert_installed.stat.exists
-    - name: Make mkcert executable
-      ansible.builtin.file:
-        path: /usr/local/bin/mkcert 
-        state: touch
-        mode: u=rwx,g=rwx,o=rwx
-      when: not mkcert_installed.stat.exists
     - name: Check if ORY CLI installed (Hydra/Kratos)
       ansible.builtin.stat:
         path: /usr/local/bin/ory

@@ -1,0 +1,34 @@
+- name: Setup Certificates
+  hosts: raspberrypi
+  remote_user: root
+
+  tasks:
+    - name: Check if mkcert installed
+      ansible.builtin.stat:
+        path: /usr/local/bin/mkcert
+      ignore_errors: true
+      register: mkcert_installed
+    - name: Download mkcert
+      ansible.builtin.command: wget -O /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/arm64"
+      when: not mkcert_installed.stat.exists
+    - name: Make mkcert executable
+      ansible.builtin.file:
+        path: /usr/local/bin/mkcert 
+        state: touch
+        mode: u=rwx,g=rwx,o=rwx
+      when: not mkcert_installed.stat.exists
+    - name: Install CA
+      ansible.builtin.shell: mkcert -install
+    - name: Create podman cert directory
+      ansible.builtin.file:
+        path: /etc/containers/certs.d
+        state: directory
+        mode: '0755'
+    - name: Generate certificate for raspberrypi.local
+      ansible.builtin.shell: mkcert -cert-file /etc/containers/certs.d/raspberrypi_local.crt -key-file /etc/containers/certs.d/raspberrypi_local.key raspberrypi.local
+    - name: Add raspberrypi.local to /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        search_string: 'raspberrypi.local'
+        state: present
+        line: 127.0.0.1 raspberrypi.local

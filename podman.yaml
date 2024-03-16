@@ -14,18 +14,30 @@
         rm: true
         state: created
         ports:
-          - "5000:5000"
-    - name: Generate systemd unit file for registry container
-      containers.podman.podman_generate_systemd:
-        name: podman-registry
-        new: true
-        no_header: false
-        dest: /etc/systemd/system
-        restart_policy: always
-        restart_sec: 20
+          - "443:443"
+        env:
+          REGISTRY_HTTP_ADDR: 0.0.0.0:443
+          REGISTRY_HTTP_TLS_CERTIFICATE: /certs/raspberrypi_local.crt
+          REGISTRY_HTTP_TLS_KEY: /certs/raspberrypi_local.key
+        mounts:
+          - "type=bind,src=/etc/containers/certs.d,dst=/certs"
+        generate_systemd:
+          new: true
+          names: true
+          path: /etc/systemd/system
+          restart_policy: always
+          container_prefix: ""
+          restart_sec: 20
     - name: Ensure registry container is started and enabled
       ansible.builtin.systemd:
-        name: container-podman-registry
+        name: podman-registry
         daemon_reload: true
         state: started
         enabled: true
+    - name: Copy registries.conf
+      ansible.builtin.copy:
+        src: registries.conf
+        dest: /etc/containers/registries.conf
+        owner: root
+        group: root
+        mode: '0644'
