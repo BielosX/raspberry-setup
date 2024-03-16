@@ -7,6 +7,10 @@
       ansible.builtin.apt:
         pkg:
           - podman
+    - name: Create Registry volume
+      containers.podman.podman_volume:
+        name: podman-registry-volume
+        state: present
     - name: Create Registry container
       containers.podman.podman_container:
         name: podman-registry
@@ -21,6 +25,8 @@
           REGISTRY_HTTP_TLS_KEY: /certs/raspberrypi_local.key
         mounts:
           - "type=bind,src=/etc/containers/certs.d,dst=/certs"
+        volumes:
+          - "podman-registry-volume:/var/lib/registry"
         generate_systemd:
           new: true
           names: true
