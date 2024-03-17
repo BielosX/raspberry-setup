@@ -1,0 +1,25 @@
+- name: Install Hydra
+  hosts: raspberrypi
+  remote_user: root
+  vars:
+    hydra_version: 2.2.0
+
+  tasks:
+    - name: Create install dir
+      ansible.builtin.file:
+        path: /opt/hydra/bin
+        state: directory
+        mode: '777'
+    - name: Download Hydra
+      ansible.builtin.get_url:
+        url: "https://github.com/ory/hydra/releases/download/v{{ hydra_version }}/hydra_{{ hydra_version }}-linux_arm64.tar.gz"
+        dest: /tmp/hydra.tar.gz
+    - name: Extract files
+      ansible.builtin.unarchive:
+        src: /tmp/hydra.tar.gz
+        remote_src: true
+        dest: /opt/hydra/bin
+    - name: Remove temp file
+      ansible.builtin.file:
+        path: /tmp/hydra.tar.gz
+        state: absent

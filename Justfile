@@ -13,4 +13,7 @@ certificates:
 podman: hosts certificates
     ansible-playbook podman.yaml -i inventory
 
-all: packages users hosts certificates podman
+hydra:
+    ansible-playbook hydra.yaml -i inventory
+
+all: packages users hosts certificates podman hydra
