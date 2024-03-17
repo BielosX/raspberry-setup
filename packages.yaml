@@ -29,6 +29,7 @@
           - ca-certificates
           - curl
           - kubectl
+          - sqlite3
     - name: Create sh link
       ansible.builtin.file:
         src: /usr/bin/bash

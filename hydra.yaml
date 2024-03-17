@@ -12,7 +12,7 @@
         mode: '777'
     - name: Download Hydra
       ansible.builtin.get_url:
-        url: "https://github.com/ory/hydra/releases/download/v{{ hydra_version }}/hydra_{{ hydra_version }}-linux_arm64.tar.gz"
+        url: "https://github.com/ory/hydra/releases/download/v{{ hydra_version }}/hydra_{{ hydra_version }}-linux_sqlite_arm64.tar.gz"
         dest: /tmp/hydra.tar.gz
     - name: Extract files
       ansible.builtin.unarchive:
@@ -23,3 +23,27 @@
       ansible.builtin.file:
         path: /tmp/hydra.tar.gz
         state: absent
+    - name: Create hydra group
+      ansible.builtin.user:
+        name: hydra
+        state: present
+    - name: Create hydra user
+      ansible.builtin.user:
+        name: hydra
+        group: hydra
+        create_home: false
+        password_lock: true
+    - name: Create hydra directory
+      ansible.builtin.file:
+        path: /var/lib/hydra
+        state: directory
+        group: hydra
+        owner: hydra
+    - name: Create data directory
+      ansible.builtin.file:
+        path: /var/lib/hydra/data
+        state: directory
+        group: hydra
+        owner: hydra
+    - name: Migrate database
+      ansible.builtin.shell: /opt/hydra/bin/hydra migrate sql --yes sqlite:///var/lib/hydra/data/hydra.sqlite?_fk=true

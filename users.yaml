@@ -3,6 +3,10 @@
   remote_user: root
   tasks:
 
+    - name: Create Operator group
+      ansible.builtin.group:
+        name: operator
+        state: present
     - name: Create Operator user
       ansible.builtin.user:
         name: operator
