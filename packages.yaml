@@ -35,16 +35,3 @@
         state: link
         dest: /bin/sh
         follow: false
-    - name: Check if ORY CLI installed (Hydra/Kratos)
-      ansible.builtin.stat:
-        path: /usr/local/bin/ory
-      ignore_errors: true
-      register: ory_installed
-    - name: Install ORY CLI (Hydra/Kratos)
-      ansible.builtin.shell: bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -b /usr/local/bin ory
-      when: not ory_installed.stat.exists
-    - name: Update ORY CLI permissions
-      ansible.builtin.file:
-        path: /usr/local/bin/ory
-        state: touch
-        mode: u=rwx,g=rx,o=rx
