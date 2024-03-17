@@ -26,9 +26,3 @@
         mode: '0755'
     - name: Generate certificate for raspberrypi.local
       ansible.builtin.shell: mkcert -cert-file /etc/containers/certs.d/raspberrypi_local.crt -key-file /etc/containers/certs.d/raspberrypi_local.key raspberrypi.local
-    - name: Add raspberrypi.local to /etc/hosts
-      ansible.builtin.lineinfile:
-        path: /etc/hosts
-        search_string: 'raspberrypi.local'
-        state: present
-        line: 127.0.0.1 raspberrypi.local
