@@ -4,8 +4,8 @@
 
   tasks:
     - name: Add raspberrypi.local to /etc/hosts
-    ansible.builtin.lineinfile:
-      path: /etc/hosts
-      search_string: 'raspberrypi.local'
-      state: present
-      line: 127.0.0.1 raspberrypi.local
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        search_string: 'raspberrypi.local'
+        state: present
+        line: 127.0.0.1 raspberrypi.local

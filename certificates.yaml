@@ -19,10 +19,10 @@
       when: not mkcert_installed.stat.exists
     - name: Install CA
       ansible.builtin.shell: mkcert -install
-    - name: Create podman cert directory
+    - name: Create cert directory
       ansible.builtin.file:
-        path: /etc/containers/certs.d
+        path: /opt/certs/raspberrypi.local
         state: directory
         mode: '0755'
     - name: Generate certificate for raspberrypi.local
-      ansible.builtin.shell: mkcert -cert-file /etc/containers/certs.d/raspberrypi_local.crt -key-file /etc/containers/certs.d/raspberrypi_local.key raspberrypi.local
+      ansible.builtin.shell: mkcert -cert-file /opt/certs/raspberrypi_local.crt -key-file /opt/certs/raspberrypi_local.key raspberrypi.local

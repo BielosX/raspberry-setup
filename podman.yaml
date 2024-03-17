@@ -7,6 +7,20 @@
       ansible.builtin.apt:
         pkg:
           - podman
+    - name: Link raspberrypi.local cert
+      ansible.builtin.file:
+        follow: false
+        src: /opt/certs/raspberrypi.local/raspberrypi_local.crt
+        dest: /etc/containers/certs.d/raspberrypi_local.crt
+        state: link
+        force: true
+    - name: Link raspberrypi.local key
+      ansible.builtin.file:
+        follow: false
+        src: /opt/certs/raspberrypi.local/raspberrypi_local.key
+        dest: /etc/containers/certs.d/raspberrypi_local.key
+        state: link
+        force: true
     - name: Create Registry volume
       containers.podman.podman_volume:
         name: podman-registry-volume
