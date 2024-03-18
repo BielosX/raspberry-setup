@@ -3,26 +3,11 @@
   remote_user: root
   vars:
     hydra_version: 2.2.0
+    hydra_home: "/var/lib/hydra"
+    hydra_bin: "/opt/hydra/bin"
+    hydra_config: "/opt/hydra/config"
 
   tasks:
-    - name: Create install dir
-      ansible.builtin.file:
-        path: /opt/hydra/bin
-        state: directory
-        mode: '777'
-    - name: Download Hydra
-      ansible.builtin.get_url:
-        url: "https://github.com/ory/hydra/releases/download/v{{ hydra_version }}/hydra_{{ hydra_version }}-linux_sqlite_arm64.tar.gz"
-        dest: /tmp/hydra.tar.gz
-    - name: Extract files
-      ansible.builtin.unarchive:
-        src: /tmp/hydra.tar.gz
-        remote_src: true
-        dest: /opt/hydra/bin
-    - name: Remove temp file
-      ansible.builtin.file:
-        path: /tmp/hydra.tar.gz
-        state: absent
     - name: Create hydra group
       ansible.builtin.user:
         name: hydra
@@ -33,17 +18,51 @@
         group: hydra
         create_home: false
         password_lock: true
+    - name: Create install dir
+      ansible.builtin.file:
+        path: "{{ hydra_bin }}"
+        state: directory
+        group: hydra
+        owner: hydra
+        mode: '755'
+    - name: Create config dir
+      ansible.builtin.file:
+        path: "{{ hydra_config }}"
+        state: directory
+        group: hydra
+        owner: hydra
+        mode: '755'
+    - name: Download Hydra
+      ansible.builtin.get_url:
+        url: "https://github.com/ory/hydra/releases/download/v{{ hydra_version }}/hydra_{{ hydra_version }}-linux_sqlite_arm64.tar.gz"
+        dest: /tmp/hydra.tar.gz
+    - name: Extract files
+      ansible.builtin.unarchive:
+        src: /tmp/hydra.tar.gz
+        remote_src: true
+        dest: "{{ hydra_bin }}"
+    - name: Remove temp file
+      ansible.builtin.file:
+        path: /tmp/hydra.tar.gz
+        state: absent
     - name: Create hydra directory
       ansible.builtin.file:
-        path: /var/lib/hydra
+        path: "{{ hydra_home }}"
         state: directory
         group: hydra
         owner: hydra
     - name: Create data directory
       ansible.builtin.file:
-        path: /var/lib/hydra/data
+        path: "{{ hydra_home }}/data"
         state: directory
         group: hydra
         owner: hydra
+    - name: Copy config file
+      ansible.builtin.template:
+        src: hydra/hydra.yaml
+        dest: "{{ hydra_config }}/hydra.yaml"
+        owner: hydra
+        group: hydra
+        mode: "644"
     - name: Migrate database
-      ansible.builtin.shell: /opt/hydra/bin/hydra migrate sql --yes sqlite:///var/lib/hydra/data/hydra.sqlite?_fk=true
+      ansible.builtin.shell: "{{ hydra_bin }}/hydra migrate -c {{ hydra_config }}/hydra.yaml sql --yes sqlite://{{ hydra_home }}/data/hydra.sqlite?_fk=true"
