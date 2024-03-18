@@ -64,5 +64,18 @@
         owner: hydra
         group: hydra
         mode: "644"
-    - name: Migrate database
-      ansible.builtin.shell: "{{ hydra_bin }}/hydra migrate -c {{ hydra_config }}/hydra.yaml sql --yes sqlite://{{ hydra_home }}/data/hydra.sqlite?_fk=true"
+    - name: Migrate sqlite database
+      ansible.builtin.shell:
+        cmd: "{{ hydra_bin }}/hydra migrate -c {{ hydra_config }}/hydra.yaml sql --yes sqlite://{{ hydra_home }}/data/hydra.sqlite?_fk=true"
+    - name: Copy systemd service file
+      ansible.builtin.copy:
+        src: hydra/hydra.service
+        dest: /etc/systemd/system/hydra.service
+        owner: root
+        mode: "644"
+    - name: Start and enable Hydra service
+      ansible.builtin.systemd_service:
+        state: started
+        name: hydra
+        enabled: true
+        daemon_reload: true

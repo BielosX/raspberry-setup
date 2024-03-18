@@ -1,0 +1,16 @@
+[Unit]
+Description=Hydra Service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=hydra
+Environment=SERVE_ADMIN_HOST=127.0.0.1
+Environment=SERVE_PUBLIC_HOST=127.0.0.1
+ExecStart=/opt/hydra/bin/hydra serve all -c /opt/hydra/config/hydra.yaml --dev
+
+[Install]
+WantedBy=multi-user.target
