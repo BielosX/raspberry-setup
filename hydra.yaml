@@ -9,7 +9,7 @@
 
   tasks:
     - name: Create hydra group
-      ansible.builtin.user:
+      ansible.builtin.group:
         name: hydra
         state: present
     - name: Create hydra user
