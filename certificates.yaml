@@ -42,7 +42,7 @@
         csr_content: "{{ ca_csr.csr }}"
         privatekey_path: "{{ ca_key_path }}"
         provider: selfsigned
-    - name: Update Certificates
+    - name: Update CA Certificates
       ansible.builtin.shell: update-ca-certificates
     - name: Create certificate private key
       community.crypto.openssl_privatekey:
