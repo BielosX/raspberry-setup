@@ -1,8 +1,15 @@
 - name: Manage Podman
   hosts: raspberrypi
   remote_user: root
-  tasks:
+  vars:
+    etc_certs_dir: /etc/containers/certs.d
+    cert_file_name: raspberrypi_local.crt
+    key_file_name: raspberrypi_local.key
+    cert_dir: /opt/certs/raspberrypi.local
+    cert_file: "{{ cert_dir }}/{{ cert_file_name }}"
+    key_file: "{{ cert_dir }}/{{ key_file_name }}"
 
+  tasks:
     - name: Install Podman package
       ansible.builtin.apt:
         pkg:
@@ -10,15 +17,15 @@
     - name: Link raspberrypi.local cert
       ansible.builtin.file:
         follow: false
-        src: /opt/certs/raspberrypi.local/raspberrypi_local.crt
-        dest: /etc/containers/certs.d/raspberrypi_local.crt
+        src: "{{ cert_file }}"
+        dest: "{{ etc_certs_dir }}/{{ cert_file_name }}"
         state: link
         force: true
     - name: Link raspberrypi.local key
       ansible.builtin.file:
         follow: false
-        src: /opt/certs/raspberrypi.local/raspberrypi_local.key
-        dest: /etc/containers/certs.d/raspberrypi_local.key
+        src: "{{ key_file }}"
+        dest: "{{ etc_certs_dir }}/{{ key_file_name }}"
         state: link
         force: true
     - name: Create Registry volume
@@ -35,10 +42,10 @@
           - "443:443"
         env:
           REGISTRY_HTTP_ADDR: 0.0.0.0:443
-          REGISTRY_HTTP_TLS_CERTIFICATE: /certs/raspberrypi_local.crt
-          REGISTRY_HTTP_TLS_KEY: /certs/raspberrypi_local.key
+          REGISTRY_HTTP_TLS_CERTIFICATE: "/certs/{{ cert_file_name }}"
+          REGISTRY_HTTP_TLS_KEY: "/certs/{{ key_file_name }}"
         mounts:
-          - "type=bind,src=/etc/containers/certs.d,dst=/certs"
+          - "type=bind,src={{ cert_dir }},dst=/certs"
         volumes:
           - "podman-registry-volume:/var/lib/registry"
         generate_systemd:

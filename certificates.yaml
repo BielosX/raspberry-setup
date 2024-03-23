@@ -1,28 +1,69 @@
 - name: Setup Certificates
   hosts: raspberrypi
   remote_user: root
+  vars:
+    cert_dir: /opt/certs/raspberrypi.local
+    key_path: "{{ cert_dir }}/raspberrypi_local.key"
+    ca_key_path: "{{ cert_dir }}/raspberrypi_local_ca.key"
+    ca_cert_dir: "/usr/local/share/ca-certificates/raspberrypi.local"
+    ca_cert_path: "{{ ca_cert_dir }}/raspberrypi_local_ca.crt"
+    cert_path: "{{ cert_dir }}/raspberrypi_local.crt"
 
   tasks:
-    - name: Check if mkcert installed
-      ansible.builtin.stat:
-        path: /usr/local/bin/mkcert
-      ignore_errors: true
-      register: mkcert_installed
-    - name: Download mkcert
-      ansible.builtin.command: wget -O /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/arm64"
-      when: not mkcert_installed.stat.exists
-    - name: Make mkcert executable
-      ansible.builtin.file:
-        path: /usr/local/bin/mkcert 
-        state: touch
-        mode: u=rwx,g=rwx,o=rwx
-      when: not mkcert_installed.stat.exists
-    - name: Install CA
-      ansible.builtin.shell: mkcert -install
     - name: Create cert directory
       ansible.builtin.file:
-        path: /opt/certs/raspberrypi.local
+        path: "{{ cert_dir }}"
         state: directory
         mode: '0755'
-    - name: Generate certificate for raspberrypi.local
-      ansible.builtin.shell: mkcert -cert-file /opt/certs/raspberrypi_local.crt -key-file /opt/certs/raspberrypi_local.key raspberrypi.local
+    - name: Create CA private key
+      community.crypto.openssl_privatekey:
+        path: "{{ ca_key_path }}"
+        state: present
+    - name: Create certificate signing request (CSR) for CA certificate
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: "{{ ca_key_path }}"
+        common_name: Raspberry Pi Local
+        use_common_name_for_san: false
+        basic_constraints:
+          - 'CA:TRUE'
+        basic_constraints_critical: true
+        key_usage:
+          - keyCertSign
+        key_usage_critical: true
+      register: ca_csr
+    - name: Create CA cert direcotry
+      ansible.builtin.file:
+        path: "{{ ca_cert_dir }}"
+        state: directory
+        mode: '0755'
+    - name: Create self-signed CA certificate from CSR
+      community.crypto.x509_certificate:
+        path: "{{ ca_cert_path }}"
+        csr_content: "{{ ca_csr.csr }}"
+        privatekey_path: "{{ ca_key_path }}"
+        provider: selfsigned
+    - name: Update Certificates
+      ansible.builtin.shell: update-ca-certificates
+    - name: Create certificate private key
+      community.crypto.openssl_privatekey:
+        path: "{{ key_path }}"
+        state: present
+    - name: Create certificate signing request (CSR) for self-signed certificate
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: "{{ key_path }}"
+        common_name: raspberrypi.local
+        organization_name: Raspberry Pi
+        subject_alt_name:
+          - "DNS:raspberrypi.local"
+      register: csr
+    - name: Create self-signed certificate from CSR
+      community.crypto.x509_certificate:
+        force: true
+        path: "{{ cert_path }}"
+        csr_content: "{{ csr.csr }}"
+        privatekey_path: "{{ key_path }}"
+        provider: ownca
+        ownca_path: "{{ ca_cert_path }}"
+        ownca_privatekey_path: "{{ ca_key_path }}"
+        ownca_not_after: +365d  # valid for one year
+        ownca_not_before: "-1d"  # valid since yesterday
