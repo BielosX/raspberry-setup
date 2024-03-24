@@ -4,13 +4,13 @@ packages:
 users:
     ansible-playbook users.yaml -i inventory
 
-certificates:
-    ansible-playbook certificates.yaml -i inventory
+certificate-authority:
+    ansible-playbook certificate_authority.yaml -i inventory
 
-podman: certificates
+podman: certificate-authority
     ansible-playbook podman.yaml -i inventory
 
 hydra:
     ansible-playbook hydra.yaml -i inventory
 
-all: packages users certificates podman hydra
+all: packages users certificate-authority podman hydra

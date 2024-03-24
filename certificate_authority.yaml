@@ -1,4 +1,4 @@
-- name: Setup Certificates
+- name: Setup Local Certificate Authority
   hosts: raspberrypi
   remote_user: root
   vars:
