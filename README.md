@@ -1,5 +1,19 @@
 # raspberry-setup
 
+## Root login
+1) Edit file `/etc/ssh/sshd_config`, find line
+`PermitRootLogin without-password` and change to `PermitRootLogin yes`
+
+2) Set root password
+```shell
+sudo passwd root
+```
+
+3) restard `ssh` service
+```shell
+systenctl restart ssh
+```
+
 ## Node connection setup
 
 1) Generate SSH key on your machine
