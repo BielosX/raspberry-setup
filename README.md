@@ -33,3 +33,8 @@ ssh-add ~/.ssh/raspberrypi
 ```
 
 Ansible should be able to connect now to the remote host as `root` user.
+
+## Clean systemd unit logs
+```shell
+journalctl --vacuum-time=1s --unit=your.service
+```
