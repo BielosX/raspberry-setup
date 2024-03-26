@@ -10,7 +10,7 @@ RestartSec=1
 User=hydra
 Environment=SERVE_ADMIN_HOST=127.0.0.1
 Environment=SERVE_PUBLIC_HOST=127.0.0.1
-ExecStart=/opt/hydra/bin/hydra serve all -c /opt/hydra/config/hydra.yaml --dev
+ExecStart=/opt/hydra/bin/hydra serve all -c /opt/hydra/config/hydra.yaml
 
 [Install]
 WantedBy=multi-user.target

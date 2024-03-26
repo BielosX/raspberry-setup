@@ -1,0 +1,27 @@
+- name: Manage systemd-journald
+  hosts: raspberrypi
+  remote_user: root
+  vars:
+    journald_conf_dir: /etc/systemd/journald.conf.d
+
+  tasks:
+    - name: Create config dir
+      ansible.builtin.file:
+        path: "{{ journald_conf_dir }}"
+        state: directory
+        group: root
+        owner: root
+        mode: '744'
+    - name: Copy config file
+      ansible.builtin.template:
+        src: journald.conf
+        dest: "{{ journald_conf_dir }}/journald.conf"
+        owner: root
+        group: root
+        mode: "644"
+    - name: Reload daemon
+      ansible.builtin.systemd_service:
+        state: started
+        name: systemd-journald
+        enabled: true
+        daemon_reload: true

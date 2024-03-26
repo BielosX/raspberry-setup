@@ -1,15 +1,27 @@
 serve:
+  tls:
+    enabled: true
+    key:
+      path: "{{ key_file }}"
+    cert:
+      path: "{{ cert_file }}"
   cookies:
     same_site_mode: Lax
 
-dsn: "sqlite://{{ hydra_home }}/data/hydra.sqlite?_fk=true"
+dsn: "{{ dsn }}"
+
+log:
+  level: debug
+  format: text
 
 urls:
   self:
-    issuer: http://127.0.0.1:4444
-  consent: http://127.0.0.1:3000/consent
-  login: http://127.0.0.1:3000/login
-  logout: http://127.0.0.1:3000/logout
+    public: https://hydra.local:4444
+    issuer: https://hydra.local:4444
+    admin: https://hydra.local:4445
+  consent: https://hydra.local:3000/consent
+  login: https://hydra.local:3000/login
+  logout: https://hydra.local:3000/logout
 
 secrets:
   system:

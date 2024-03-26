@@ -17,6 +17,10 @@
       community.crypto.openssl_privatekey:
         path: "{{ key_file }}"
         state: present
+    - name: Change key permissions
+      ansible.builtin.file:
+        path: "{{ key_file }}"
+        mode: '0744'
     - name: Create certificate signing request (CSR) for self-signed certificate
       community.crypto.openssl_csr_pipe:
         privatekey_path: "{{ key_file }}"

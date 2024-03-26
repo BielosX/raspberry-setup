@@ -2,10 +2,19 @@
   hosts: raspberrypi
   remote_user: root
   vars:
+    ca_dir : /usr/local/share/ca-certificates/local
+    ca_key_path: "{{ ca_dir }}/local_ca.key"
+    ca_cert_path: "{{ ca_dir }}/local_ca.crt"
+
     hydra_version: 2.2.0
     hydra_home: "/var/lib/hydra"
     hydra_bin: "/opt/hydra/bin"
+    hydra_cert_dir: "/opt/hydra/cert"
     hydra_config: "/opt/hydra/config"
+    key_file: "{{ hydra_cert_dir }}/hydra_local.key"
+    cert_file: "{{ hydra_cert_dir }}/hydra_local.crt"
+
+    dsn: "sqlite://{{ hydra_home }}/data/hydra.sqlite?_fk=true"
 
   tasks:
     - name: Create hydra group
@@ -32,6 +41,50 @@
         group: hydra
         owner: hydra
         mode: '755'
+    - name: Create cert dir
+      ansible.builtin.file:
+        path: "{{ hydra_cert_dir }}"
+        state: directory
+        group: hydra
+        owner: hydra
+        mode: '755'
+
+    - name: Create certificate private key
+      community.crypto.openssl_privatekey:
+        path: "{{ key_file }}"
+        state: present
+    - name: Change key permissions
+      ansible.builtin.file:
+        path: "{{ key_file }}"
+        mode: '0744'
+
+    - name: Create certificate signing request (CSR) for self-signed certificate
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: "{{ key_file }}"
+        common_name: hydra.local
+        organization_name: Raspberry Pi
+        subject_alt_name:
+          - "DNS:hydra.local"
+      register: csr
+    - name: Create self-signed certificate from CSR
+      community.crypto.x509_certificate:
+        force: true
+        path: "{{ cert_file }}"
+        csr_content: "{{ csr.csr }}"
+        privatekey_path: "{{ key_file }}"
+        provider: ownca
+        ownca_path: "{{ ca_cert_path }}"
+        ownca_privatekey_path: "{{ ca_key_path }}"
+        ownca_not_after: +365d  # valid for one year
+        ownca_not_before: "-1d"  # valid since yesterdaw
+    
+    - name: Add hydra.local to /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        search_string: 'hydra.local'
+        state: present
+        line: 127.0.0.1 hydra.local
+
     - name: Download Hydra
       ansible.builtin.get_url:
         url: "https://github.com/ory/hydra/releases/download/v{{ hydra_version }}/hydra_{{ hydra_version }}-linux_sqlite_arm64.tar.gz"
@@ -45,6 +98,7 @@
       ansible.builtin.file:
         path: /tmp/hydra.tar.gz
         state: absent
+
     - name: Create hydra directory
       ansible.builtin.file:
         path: "{{ hydra_home }}"
@@ -64,9 +118,11 @@
         owner: hydra
         group: hydra
         mode: "644"
+
     - name: Migrate sqlite database
       ansible.builtin.shell:
-        cmd: "{{ hydra_bin }}/hydra migrate -c {{ hydra_config }}/hydra.yaml sql --yes sqlite://{{ hydra_home }}/data/hydra.sqlite?_fk=true"
+        cmd: "{{ hydra_bin }}/hydra migrate -c {{ hydra_config }}/hydra.yaml sql --yes {{ dsn }}"
+
     - name: Copy systemd service file
       ansible.builtin.copy:
         src: hydra/hydra.service

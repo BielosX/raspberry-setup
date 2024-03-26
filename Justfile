@@ -10,7 +10,10 @@ certificate-authority:
 podman: certificate-authority
     ansible-playbook podman.yaml -i inventory
 
-hydra:
+hydra: certificate-authority
     ansible-playbook hydra.yaml -i inventory
 
-all: packages users certificate-authority podman hydra
+journald:
+    ansible-playbook journald.yaml -i inventory
+
+all: packages users certificate-authority podman hydra journald
