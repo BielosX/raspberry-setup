@@ -30,6 +30,7 @@
           - curl
           - kubectl
           - sqlite3
+          - lldb
     - name: Create sh link
       ansible.builtin.file:
         src: /usr/bin/bash
