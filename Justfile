@@ -16,4 +16,7 @@ hydra: certificate-authority
 journald:
     ansible-playbook journald.yaml -i inventory
 
-all: packages users certificate-authority podman hydra journald
+kratos: certificate-authority
+    ansible-playbook kratos.yaml -i inventory
+
+all: packages users certificate-authority podman hydra kratos journald

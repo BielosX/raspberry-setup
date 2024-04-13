@@ -1,0 +1,160 @@
+- name: Install Kratos
+  hosts: raspberrypi
+  remote_user: root
+  vars:
+    ca_dir : /usr/local/share/ca-certificates/local
+    ca_key_path: "{{ ca_dir }}/local_ca.key"
+    ca_cert_path: "{{ ca_dir }}/local_ca.crt"
+
+    kratos_version: 1.1.0
+    kratos_home: "/var/lib/kratos"
+    kratos_bin: "/opt/kratos/bin"
+    kratos_cert_dir: "/opt/kratos/cert"
+    kratos_config: "/opt/kratos/config"
+    key_file: "{{ kratos_cert_dir }}/kratos_local.key"
+    cert_file: "{{ kratos_cert_dir }}/kratos_local.crt"
+
+    sqlite_file: "{{ kratos_home }}/data/kratos.sqlite"
+    dsn: "sqlite://{{ sqlite_file }}?_fk=true"
+    hydra_url: https://hydra.local:4445
+    kratos_url: https://kratos.local
+    schema_location: /etc/config/kratos
+    schema_file: "{{ schema_location }}/identity.schema.json"
+
+  tasks:
+    - name: Create kratos group
+      ansible.builtin.group:
+        name: kratos
+        state: present
+    - name: Create kratos user
+      ansible.builtin.user:
+        name: kratos
+        group: kratos
+        create_home: false
+        password_lock: true
+    - name: Create install dir
+      ansible.builtin.file:
+        path: "{{ kratos_bin }}"
+        state: directory
+        group: kratos
+        owner: kratos
+        mode: '755'
+    - name: Create config dir
+      ansible.builtin.file:
+        path: "{{ kratos_config }}"
+        state: directory
+        group: kratos
+        owner: kratos
+        mode: '755'
+    - name: Create cert dir
+      ansible.builtin.file:
+        path: "{{ kratos_cert_dir }}"
+        state: directory
+        group: kratos
+        owner: kratos
+        mode: '755'
+
+    - name: Create certificate private key
+      community.crypto.openssl_privatekey:
+        path: "{{ key_file }}"
+        state: present
+    - name: Change key permissions
+      ansible.builtin.file:
+        path: "{{ key_file }}"
+        mode: '0744'
+
+    - name: Create certificate signing request (CSR) for self-signed certificate
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: "{{ key_file }}"
+        common_name: kratos.local
+        organization_name: Raspberry Pi
+        subject_alt_name:
+          - "DNS:kratos.local"
+      register: csr
+    - name: Create self-signed certificate from CSR
+      community.crypto.x509_certificate:
+        force: true
+        path: "{{ cert_file }}"
+        csr_content: "{{ csr.csr }}"
+        privatekey_path: "{{ key_file }}"
+        provider: ownca
+        ownca_path: "{{ ca_cert_path }}"
+        ownca_privatekey_path: "{{ ca_key_path }}"
+        ownca_not_after: +365d  # valid for one year
+        ownca_not_before: "-1d"  # valid since yesterdaw
+    
+    - name: Add kratos.local to /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        search_string: 'kratos.local'
+        state: present
+        line: 127.0.0.1 kratos.local
+
+    - name: Download kratos
+      ansible.builtin.get_url:
+        url: "https://github.com/ory/kratos/releases/download/v{{ kratos_version }}/kratos_{{ kratos_version }}-linux_sqlite_arm64.tar.gz"
+        dest: /tmp/kratos.tar.gz
+    - name: Extract files
+      ansible.builtin.unarchive:
+        src: /tmp/kratos.tar.gz
+        remote_src: true
+        dest: "{{ kratos_bin }}"
+    - name: Remove temp file
+      ansible.builtin.file:
+        path: /tmp/kratos.tar.gz
+        state: absent
+
+    - name: Create kratos directory
+      ansible.builtin.file:
+        path: "{{ kratos_home }}"
+        state: directory
+        group: kratos
+        owner: kratos
+    - name: Create data directory
+      ansible.builtin.file:
+        path: "{{ kratos_home }}/data"
+        state: directory
+        group: kratos
+        owner: kratos
+    - name: Copy config file
+      ansible.builtin.template:
+        src: kratos/config.yaml
+        dest: "{{ kratos_config }}/config.yaml"
+        owner: kratos
+        group: kratos
+        mode: "644"
+    - name: Create etc config directory
+      ansible.builtin.file:
+        path: "{{ schema_location }}"
+        state: directory
+        group: kratos
+        owner: kratos
+    - name: Copy identity file
+      ansible.builtin.copy:
+        src: kratos/identity.schema.json
+        dest: "{{ schema_file }}"
+        owner: root
+        mode: "644"
+
+    - name: Migrate sqlite database
+      ansible.builtin.shell:
+        cmd: "{{ kratos_bin }}/kratos migrate -c {{ kratos_config }}/config.yaml sql --yes {{ dsn }}"
+    - name: Update sqlite file permissions
+      ansible.builtin.file:
+        path: "{{ sqlite_file }}"
+        owner: kratos
+        group: kratos
+        mode: '0644'
+
+    - name: Copy systemd service file
+      ansible.builtin.copy:
+        src: kratos/kratos.service
+        dest: /etc/systemd/system/kratos.service
+        owner: root
+        mode: "644"
+    - name: Start and enable kratos service
+      ansible.builtin.systemd_service:
+        state: started
+        name: kratos
+        enabled: true
+        daemon_reload: true
