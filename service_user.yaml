@@ -1,0 +1,31 @@
+- name: "Create {{ user_name }} group"
+  ansible.builtin.group:
+    name: "{{ user_name }}"
+    state: present
+- name: "Create {{ user_name }} user"
+  ansible.builtin.user:
+    name: "{{ user_name }}"
+    group: "{{ user_name }}"
+    create_home: true
+    password_lock: true
+- name: Create config dir
+  ansible.builtin.file:
+    path: "/home/{{ user_name }}/conf"
+    state: directory
+    group: "{{ user_name }}"
+    owner: "{{ user_name }}"
+    mode: '755'
+- name: Create data dir
+  ansible.builtin.file:
+    path: "/home/{{ user_name }}/data"
+    state: directory
+    group: "{{ user_name }}"
+    owner: "{{ user_name }}"
+    mode: '755'
+- name: Create cert dir
+  ansible.builtin.file:
+    path: "/home/{{ user_name }}/cert"
+    state: directory
+    group: "{{ user_name }}"
+    owner: "{{ user_name }}"
+    mode: '755'

@@ -22,16 +22,9 @@
     schema_file: "{{ schema_location }}/identity.schema.json"
 
   tasks:
-    - name: Create kratos group
-      ansible.builtin.group:
-        name: kratos
-        state: present
-    - name: Create kratos user
-      ansible.builtin.user:
-        name: kratos
-        group: kratos
-        create_home: false
-        password_lock: true
+    - import_tasks: service_user.yaml
+      vars:
+        user_name: kratos
     - name: Create install dir
       ansible.builtin.file:
         path: "{{ kratos_bin }}"
