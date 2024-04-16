@@ -1,0 +1,13 @@
+- name: Download package
+  ansible.builtin.get_url:
+    url: "{{ url }}"
+    dest: /tmp/downloaded.tar.gz
+- name: Extract files
+  ansible.builtin.unarchive:
+    src: /tmp/downloaded.tar.gz
+    remote_src: true
+    dest: "{{ destination }}"
+- name: Remove temp file
+  ansible.builtin.file:
+    path: /tmp/downloaded.tar.gz
+    state: absent

@@ -1,5 +1,5 @@
 [Unit]
-Description=Kratos Service
+Description={{ name }} Service
 After=network.target
 StartLimitIntervalSec=0
 
@@ -7,8 +7,9 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-User=kratos
-ExecStart=/opt/kratos/bin/kratos -c /opt/kratos/config/config.yaml serve
+User={{ user }}
+Group={{ group }}
+ExecStart={{ exec }}
 
 [Install]
 WantedBy=multi-user.target

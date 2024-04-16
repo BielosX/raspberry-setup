@@ -51,19 +51,10 @@
       vars:
         domain: kratos.local
 
-    - name: Download kratos
-      ansible.builtin.get_url:
-        url: "https://github.com/ory/kratos/releases/download/v{{ kratos_version }}/kratos_{{ kratos_version }}-linux_sqlite_arm64.tar.gz"
-        dest: /tmp/kratos.tar.gz
-    - name: Extract files
-      ansible.builtin.unarchive:
-        src: /tmp/kratos.tar.gz
-        remote_src: true
-        dest: "{{ kratos_bin }}"
-    - name: Remove temp file
-      ansible.builtin.file:
-        path: /tmp/kratos.tar.gz
-        state: absent
+    - import_tasks: download_tar_gz.yaml
+      vars:
+        url: "https://github.com/ory/kratos/releases/download/v{{ kratos_version }}/kratos_{{ kratos_version }}-linux_sqlite_arm64.tar.gz" 
+        destination: "{{ kratos_bin }}"
 
     - name: Create kratos directory
       ansible.builtin.file:
@@ -107,15 +98,9 @@
         group: kratos
         mode: '0644'
 
-    - name: Copy systemd service file
-      ansible.builtin.copy:
-        src: kratos/kratos.service
-        dest: /etc/systemd/system/kratos.service
-        owner: root
-        mode: "644"
-    - name: Start and enable kratos service
-      ansible.builtin.systemd_service:
-        state: started
+    - import_tasks: systemd_service.yaml
+      vars:
         name: kratos
-        enabled: true
-        daemon_reload: true
+        user: kratos
+        group: kratos
+        exec: /opt/kratos/bin/kratos -c /opt/kratos/config/config.yaml serve
