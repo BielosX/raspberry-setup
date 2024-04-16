@@ -54,41 +54,9 @@
         owner: kratos
         mode: '755'
 
-    - name: Create certificate private key
-      community.crypto.openssl_privatekey:
-        path: "{{ key_file }}"
-        state: present
-    - name: Change key permissions
-      ansible.builtin.file:
-        path: "{{ key_file }}"
-        mode: '0744'
-
-    - name: Create certificate signing request (CSR) for self-signed certificate
-      community.crypto.openssl_csr_pipe:
-        privatekey_path: "{{ key_file }}"
-        common_name: kratos.local
-        organization_name: Raspberry Pi
-        subject_alt_name:
-          - "DNS:kratos.local"
-      register: csr
-    - name: Create self-signed certificate from CSR
-      community.crypto.x509_certificate:
-        force: true
-        path: "{{ cert_file }}"
-        csr_content: "{{ csr.csr }}"
-        privatekey_path: "{{ key_file }}"
-        provider: ownca
-        ownca_path: "{{ ca_cert_path }}"
-        ownca_privatekey_path: "{{ ca_key_path }}"
-        ownca_not_after: +365d  # valid for one year
-        ownca_not_before: "-1d"  # valid since yesterdaw
-    
-    - name: Add kratos.local to /etc/hosts
-      ansible.builtin.lineinfile:
-        path: /etc/hosts
-        search_string: 'kratos.local'
-        state: present
-        line: 127.0.0.1 kratos.local
+    - import_tasks: certificate.yaml
+      vars:
+        domain: kratos.local
 
     - name: Download kratos
       ansible.builtin.get_url:
