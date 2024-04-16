@@ -7,6 +7,7 @@
     src: /tmp/downloaded.tar.gz
     remote_src: true
     dest: "{{ destination }}"
+    extra_opts: "{{ extra_opts | default([]) }}"
 - name: Remove temp file
   ansible.builtin.file:
     path: /tmp/downloaded.tar.gz
