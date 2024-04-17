@@ -11,5 +11,11 @@ User={{ user }}
 Group={{ group }}
 ExecStart={{ exec }}
 
+{% if environment_variables is defined %}
+{% for key, value in environment_variables.items() %}
+Environment={{ key }}={{ value }}
+{% endfor %}
+{% endif %}
+
 [Install]
 WantedBy=multi-user.target
