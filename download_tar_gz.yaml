@@ -1,8 +1,8 @@
-- name: Download package
+- name: "Download package from {{ url }}"
   ansible.builtin.get_url:
     url: "{{ url }}"
     dest: /tmp/downloaded.tar.gz
-- name: Extract files
+- name: "Extract files to {{ destination }}"
   ansible.builtin.unarchive:
     src: /tmp/downloaded.tar.gz
     remote_src: true
