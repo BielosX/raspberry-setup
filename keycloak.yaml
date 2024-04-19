@@ -1,0 +1,31 @@
+- name: Install Keycloak
+  hosts: raspberrypi
+  remote_user: root
+  vars:
+    version: "24.0.3"
+    download_url: "https://github.com/keycloak/keycloak/releases/download/{{ version }}/keycloak-{{ version }}.tar.gz"
+
+  tasks:
+    - import_tasks: service_user.yaml
+      vars:
+        user_name: keycloak
+    - import_tasks: download_tar_gz.yaml
+      vars:
+        url: "{{ download_url }}" 
+        destination: /home/keycloak
+        extra_opts: ['--strip-components=1', '--show-stored-names']
+    - name: Fix permissions
+      ansible.builtin.file:
+        path: /home/keycloak
+        owner: keycloak
+        group: keycloak
+        recurse: true
+        mode: '755'
+    - import_tasks: systemd_service.yaml
+      vars:
+        name: keycloak
+        user: keycloak
+        group: keycloak
+        exec: /home/keycloak/bin/kc.sh start
+        environment_variables:
+          JAVA_HOME: /opt/java/corretto17

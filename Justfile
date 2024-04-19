@@ -22,4 +22,8 @@ kratos: certificate-authority
 java:
     ansible-playbook java.yaml -i inventory
 
-all: packages users certificate-authority podman hydra kratos journald java
+keycloak:
+    ansible-playbook keycloak.yaml -i inventory
+
+
+all: packages users certificate-authority podman hydra kratos journald java keycloak
