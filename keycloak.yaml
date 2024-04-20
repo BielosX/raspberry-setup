@@ -4,6 +4,12 @@
   vars:
     version: "24.0.3"
     download_url: "https://github.com/keycloak/keycloak/releases/download/{{ version }}/keycloak-{{ version }}.tar.gz"
+    ca_dir : /usr/local/share/ca-certificates/local
+    ca_key_path: "{{ ca_dir }}/local_ca.key"
+    ca_cert_path: "{{ ca_dir }}/local_ca.crt"
+    cert_dir: /home/keycloak/cert
+    key_file: "{{ cert_dir }}/keycloak.key"
+    cert_file: "{{ cert_dir }}/keycloak.crt"
 
   tasks:
     - import_tasks: service_user.yaml
@@ -21,6 +27,16 @@
         group: keycloak
         recurse: true
         mode: '755'
+    - import_tasks: certificate.yaml
+      vars:
+        domain: keycloak.local
+    - name: Copy config file
+      ansible.builtin.copy:
+        src: keycloak.conf
+        dest: /home/keycloak/conf/keycloak.conf
+        owner: keycloak
+        group: keycloak
+        mode: '400'
     - import_tasks: systemd_service.yaml
       vars:
         name: keycloak
