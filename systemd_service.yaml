@@ -6,7 +6,7 @@
     mode: "644"
 - name: "Start and enable {{ name }} service"
   ansible.builtin.systemd_service:
-    state: started
+    state: "{{ state | default('started') }}"
     name: "{{ name }}"
     enabled: true
     daemon_reload: true

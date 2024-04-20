@@ -51,5 +51,6 @@
         group: keycloak
         exec: /home/keycloak/bin/kc.sh start --optimized
         exec_start_pre: /home/keycloak/bin/keycloak_build.sh
+        state: restarted
         environment_variables:
           JAVA_HOME: /opt/java/corretto17
