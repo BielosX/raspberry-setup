@@ -3,7 +3,7 @@
 function build() {
     /home/keycloak/bin/kc.sh build
     timestamp=$(date +%s)
-    echo "$timestamp" > /home/keycloak/build.txt
+    echo "$timestamp" > /home/keycloak/last_build.txt
 }
 
 if [ ! -f /home/keycloak/build.txt ]; then
@@ -12,7 +12,7 @@ if [ ! -f /home/keycloak/build.txt ]; then
     exit 0
 fi
 
-timestamp=$(cat /home/keycloak/build.txt)
+timestamp=$(cat /home/keycloak/last_build.txt)
 modification_timestamp=$(stat -c '%Y' /home/keycloak/conf/keycloak.conf)
 if (( modification_timestamp > timestamp )); then
     echo "Config file modified, rebuild"
