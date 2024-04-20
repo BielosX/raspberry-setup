@@ -37,11 +37,19 @@
         owner: keycloak
         group: keycloak
         mode: '400'
+    - name: Copy build file
+      ansible.builtin.copy:
+        src: keycloak_build.sh
+        dest: /home/keycloak/bin/keycloak_build.sh
+        owner: keycloak
+        group: keycloak
+        mode: '744'
     - import_tasks: systemd_service.yaml
       vars:
         name: keycloak
         user: keycloak
         group: keycloak
-        exec: /home/keycloak/bin/kc.sh start
+        exec: /home/keycloak/bin/kc.sh start --optimized
+        exec_start_pre: /home/keycloak/bin/keycloak_build.sh
         environment_variables:
           JAVA_HOME: /opt/java/corretto17

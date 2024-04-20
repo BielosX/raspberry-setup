@@ -10,6 +10,9 @@ RestartSec=30
 User={{ user }}
 Group={{ group }}
 ExecStart={{ exec }}
+{% if exec_start_pre is defined %}
+ExecStartPre={{ exec_start_pre }}
+{% endif %}
 
 {% if environment_variables is defined %}
 {% for key, value in environment_variables.items() %}
