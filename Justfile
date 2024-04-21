@@ -10,14 +10,8 @@ certificate-authority:
 podman: certificate-authority
     ansible-playbook podman.yaml -i inventory
 
-hydra: certificate-authority
-    ansible-playbook hydra.yaml -i inventory
-
 journald:
     ansible-playbook journald.yaml -i inventory
-
-kratos: certificate-authority
-    ansible-playbook kratos.yaml -i inventory
 
 java:
     ansible-playbook java.yaml -i inventory
@@ -25,5 +19,4 @@ java:
 keycloak:
     ansible-playbook keycloak.yaml -i inventory
 
-
-all: packages users certificate-authority podman hydra kratos journald java keycloak
+all: packages users certificate-authority podman journald java keycloak
