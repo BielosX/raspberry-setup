@@ -1,0 +1,20 @@
+- name: Install PostgreSQL
+  hosts: raspberrypi
+  remote_user: root
+
+  tasks:
+    - name: Create key directory
+      ansible.builtin.file:
+        path: /usr/share/postgresql-common/pgdg
+        state: directory
+        mode: '0755'
+    - name: Setup Postgres Keys
+      ansible.builtin.shell: curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    - name: Add Apt Postgres Repository
+      ansible.builtin.apt_repository:
+        repo: deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main
+        state: present
+    - name: Update repositories cache and install Postgres package
+      ansible.builtin.apt:
+        name: postgresql-16
+        update_cache: yes

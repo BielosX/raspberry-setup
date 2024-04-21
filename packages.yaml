@@ -5,6 +5,9 @@
     kubernetes_version: v1.29
 
   tasks:
+
+    - name: Allow release-info to change for APT repositories
+      command: apt-get update -y --allow-releaseinfo-change
     - name: Create /etc/apt/keyrings
       ansible.builtin.file:
         path: /etc/api/keyrings

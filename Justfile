@@ -19,4 +19,7 @@ java:
 keycloak:
     ansible-playbook keycloak.yaml -i inventory
 
-all: packages users certificate-authority podman journald java keycloak
+postgresql:
+    ansible-playbook postgresql.yaml -i inventory
+
+all: packages users certificate-authority podman journald java keycloak postgresql
