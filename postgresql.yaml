@@ -23,7 +23,9 @@
         state: present
     - name: Update repositories cache and install Postgres package
       ansible.builtin.apt:
-        name: postgresql-16
+        pkg:
+          - postgresql-16
+          - python3-psycopg2
         update_cache: yes
     - import_tasks: service_user.yaml
       vars:
@@ -65,3 +67,7 @@
         name: postgresql
         enabled: true
         daemon_reload: true
+    - name: Create a new database with name "demo"
+      community.postgresql.postgresql_db:
+        name: demo
+        login_unix_socket: /var/run/postgresql
