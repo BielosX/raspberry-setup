@@ -38,3 +38,14 @@ Ansible should be able to connect now to the remote host as `root` user.
 ```shell
 journalctl --vacuum-time=1s --unit=your.service
 ```
+
+## PostgreSQL
+
+Client auth process is controler by [pg_hba.conf](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html)
+
+### Systemd
+
+Service `postgresql` is responsible for spawning services `postgresql@version-instance`, to view actual status run
+```shell
+systemctl status 'postgresql*'
+```

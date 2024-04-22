@@ -1,6 +1,13 @@
 - name: Install PostgreSQL
   hosts: raspberrypi
   remote_user: root
+  vars:
+    ca_dir : /usr/local/share/ca-certificates/local
+    ca_key_path: "{{ ca_dir }}/local_ca.key"
+    ca_cert_path: "{{ ca_dir }}/local_ca.crt"
+    cert_dir: /home/postgres/cert
+    key_file: "{{ cert_dir }}/postgres.key"
+    cert_file: "{{ cert_dir }}/postgres.crt"
 
   tasks:
     - name: Create key directory
@@ -18,3 +25,49 @@
       ansible.builtin.apt:
         name: postgresql-16
         update_cache: yes
+    - import_tasks: service_user.yaml
+      vars:
+        user_name: postgres
+    - import_tasks: certificate.yaml
+      vars:
+        domain: postgres.local
+    - name: Copy config file
+      ansible.builtin.template:
+        src: postgres/postgresql.conf.tmpl
+        dest: /var/lib/postgresql/16/main/postgresql.conf
+        owner: postgres
+        group: postgres
+        mode: '400'
+    - name: Copy pg_hba.conf
+      ansible.builtin.copy:
+        src: postgres/pg_hba.conf 
+        dest: /etc/postgresql/16/main/pg_hba.conf
+        owner: postgres
+        group: postgres
+        mode: '400'
+    - name: Fix permissions
+      ansible.builtin.file:
+        path: /var/lib/postgresql/16/main
+        owner: postgres
+        group: postgres
+        recurse: true
+        mode: '700'
+    - name: Fix cert permissions
+      ansible.builtin.file:
+        path: /home/postgres/cert
+        owner: postgres
+        group: postgres
+        recurse: true
+        mode: '600'
+    - name: Copy systemd Postgresql service file
+      ansible.builtin.copy:
+        src: postgres/postgresql.service
+        dest: "/etc/systemd/system/postgresql.service"
+        owner: root
+        mode: "644"
+    - name: "Start and enable Postgresql service"
+      ansible.builtin.systemd_service:
+        state: started
+        name: postgresql
+        enabled: true
+        daemon_reload: true
