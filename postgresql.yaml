@@ -69,12 +69,6 @@
         group: postgres
         recurse: true
         mode: '600'
-    - name: Copy systemd Postgresql service file
-      ansible.builtin.copy:
-        src: postgres/postgresql.service
-        dest: "/etc/systemd/system/postgresql.service"
-        owner: root
-        mode: "644"
     - name: "Start and enable Postgresql service"
       ansible.builtin.systemd_service:
         state: started
