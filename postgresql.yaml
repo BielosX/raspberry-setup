@@ -25,7 +25,7 @@
       ansible.builtin.apt:
         pkg:
           - postgresql-16
-          - python3-psycopg2
+          - python3-psycopg2 # to have community.postgresql.postgresql_db working
         update_cache: yes
     - import_tasks: service_user.yaml
       vars:
